@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Therapy Ops Phase 5.2</title>
+<style>
+:root{
+  --bg:#ebe5dc; --bg2:#f3eee7; --card:#f7f3ed; --line:#cfc4b7; --text:#2f2a25; --muted:#6f675e;
+  --nav:#6d8278; --btn:#7c95ac; --btn2:#d9d0c5; --danger:#a86f6f; --ok:#7b9b7e; --shadow:0 1px 2px rgba(0,0,0,.05);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
+.app{display:grid;grid-template-columns:250px 1fr;min-height:100vh}
+.sidebar{background:linear-gradient(180deg,var(--nav),#5d6f67);color:#fff;padding:18px}
+.brand{font-size:24px;font-weight:700;margin-bottom:6px}
+.sub{font-size:12px;line-height:1.5;color:#eef2ef;margin-bottom:18px}
+.nav button{display:block;width:100%;text-align:left;margin-bottom:10px;padding:11px 13px;border:none;border-radius:10px;background:rgba(255,255,255,.14);color:#fff;cursor:pointer}
+.nav button.active,.nav button:hover{background:rgba(255,255,255,.26)}
+.main{padding:20px}
+.view{display:none}.view.active{display:block}
+.title{font-size:28px;font-weight:700;margin:0 0 6px}
+.subtitle{color:var(--muted);margin-bottom:18px;line-height:1.6}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:var(--shadow);margin-bottom:16px}
+.card h3{margin:0 0 10px;font-size:16px}
+.muted{color:var(--muted);font-size:13px;line-height:1.5}
+.stat{font-size:32px;font-weight:700}
+input,textarea,select{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;font:inherit;background:var(--bg2);margin-bottom:10px;color:var(--text)}
+textarea{min-height:88px;resize:vertical}
+.btn{background:var(--btn);color:white;border:none;border-radius:10px;padding:10px 13px;cursor:pointer;font-weight:700}
+.btn.secondary{background:var(--btn2);color:var(--text)}
+.btn.small{padding:6px 9px;border-radius:8px;font-size:12px}
+.btn.danger{background:var(--danger)}
+.btn.ok{background:var(--ok)}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.list{display:grid;gap:12px}
+.item{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:14px}
+.item h4{margin:0 0 8px;font-size:15px}
+.small{font-size:12px}
+.empty{padding:18px;border:1px dashed var(--line);border-radius:12px;background:rgba(255,255,255,.25);color:var(--muted)}
+.calHeader{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+.monthGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+.dow{font-size:12px;color:var(--muted);font-weight:700;text-align:center;padding-bottom:4px}
+.dayCell{background:var(--bg2);border:1px solid var(--line);border-radius:12px;min-height:130px;padding:8px;display:flex;flex-direction:column;gap:6px}
+.dayCell.other{opacity:.45}
+.dayNum{font-weight:700;font-size:13px}
+.apptChip{border-radius:8px;padding:6px 7px;font-size:11px;line-height:1.3;color:#1f1a16}
+.apptChip strong{display:block}
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
+.legendItem{display:flex;align-items:center;gap:6px;font-size:12px}
+.dot{width:12px;height:12px;border-radius:999px;border:1px solid rgba(0,0,0,.08)}
+.weekProviderGrid{display:grid;grid-template-columns:140px repeat(5,1fr);gap:8px;align-items:start}
+.cellHead{font-size:12px;color:var(--muted);font-weight:700;text-align:center;padding:8px 0}
+.providerNameCell{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:10px;font-size:13px;font-weight:700}
+.weekSlot{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:8px;min-height:120px}
+.dayTimeline{display:grid;grid-template-columns:90px 1fr;gap:10px}
+.timeCol{display:grid;gap:8px}
+.timeLabel{height:52px;font-size:12px;color:var(--muted);display:flex;align-items:flex-start;justify-content:flex-end;padding-top:2px}
+.dayCol{display:grid;gap:8px}
+.daySlot{min-height:52px;background:var(--bg2);border:1px dashed var(--line);border-radius:10px;padding:6px}
+.pill{display:inline-flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--line);border-radius:999px;padding:4px 8px;font-size:12px}
+.colorSwatch{width:18px;height:18px;border-radius:999px;border:1px solid rgba(0,0,0,.12);display:inline-block;vertical-align:middle;cursor:pointer}
+.hiddenColor{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.tag{display:inline-block;padding:4px 8px;border-radius:999px;font-size:12px;font-weight:700;margin-right:6px;background:#e2ddd5}
+.slotBtn{display:inline-block;margin:4px 6px 0 0;padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:var(--bg2);cursor:pointer;font-size:12px}
+.slotBtn:hover{background:#e6efe8}
+table{width:100%;border-collapse:collapse}
+th,td{padding:8px;border-bottom:1px solid var(--line);text-align:left;font-size:12px;vertical-align:top}
+@media (max-width: 1100px){
+  .app{grid-template-columns:1fr}
+  .nav{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .nav button{margin:0}
+  .split,.row,.row3,.monthGrid,.weekProviderGrid,.dayTimeline{grid-template-columns:1fr}
+  .dayCell{min-height:unset}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">Therapy Ops</div>
+    <div class="sub">Phase 5.2 keeps Phase 5.1 and adds provider blocked times, better eval suggestions, weekday-first scheduling, and intake document tracking.</div>
+    <div class="nav" id="nav"></div>
+  </aside>
+  <main class="main">
+    <section id="dashboard" class="view active"></section>
+    <section id="referrals" class="view"></section>
+    <section id="patients" class="view"></section>
+    <section id="providers" class="view"></section>
+    <section id="schedule" class="view"></section>
+    <section id="payers" class="view"></section>
+    <section id="imports" class="view"></section>
+  </main>
+</div>
+
+<script>
+const KEY = "therapyOpsPhase5_2.v1";
+const OFFICE_START = 8;
+const OFFICE_END = 18;
+const timeOptions = [];
+for(let hour=OFFICE_START; hour<=OFFICE_END; hour++){
+  for(let minute of [0,15,30,45]){
+    if(hour===OFFICE_END && minute>0) continue;
+    const h12 = hour === 12 ? 12 : hour % 12;
+    const suffix = hour < 12 ? "AM" : "PM";
+    const mm = String(minute).padStart(2,"0");
+    timeOptions.push(`${h12}:${mm} ${suffix}`);
+  }
+}
+const lengthOptions = [15,30,45,60,75,90,120];
+const weekdays = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const providerPalette = ["#d8e6f0","#e6ddd2","#dce9d8","#efe1d5","#ddd8ef","#e7edcf","#f0d8e5","#d7ece8"];
+
+const defaultPayers = [
+  {name:"Children's Medical Services (CMS)", claimsAddress:"", phone:"", fax:"", portal:"", notes:""},
+  {name:"Straight Medicaid", claimsAddress:"", phone:"", fax:"", portal:"", notes:""},
+  {name:"Sunshine Health", claimsAddress:"", phone:"", fax:"", portal:"", notes:""},
+  {name:"Simply Healthcare", claimsAddress:"", phone:"", fax:"", portal:"", notes:""},
+  {name:"Molina Healthcare", claimsAddress:"", phone:"", fax:"", portal:"", notes:""},
+  {name:"Aetna Better Health", claimsAddress:"", phone:"", fax:"", portal:"", notes:""},
+  {name:"Florida Blue", claimsAddress:"", phone:"", fax:"", portal:"", notes:""},
+  {name:"Florida Blue BlueOptions", claimsAddress:"", phone:"", fax:"", portal:"", notes:""},
+  {name:"Florida Blue BlueSelect", claimsAddress:"", phone:"", fax:"", portal:"", notes:""},
+  {name:"TRICARE", claimsAddress:"", phone:"", fax:"", portal:"", notes:""},
+  {name:"Cigna", claimsAddress:"", phone:"", fax:"", portal:"", notes:""},
+  {name:"Aetna Commercial", claimsAddress:"", phone:"", fax:"", portal:"", notes:""},
+  {name:"Humana", claimsAddress:"", phone:"", fax:"", portal:"", notes:""},
+  {name:"UnitedHealthcare", claimsAddress:"", phone:"", fax:"", portal:"", notes:""},
+  {name:"UnitedHealthcare Community Plan", claimsAddress:"", phone:"", fax:"", portal:"", notes:""},
+  {name:"Ambetter", claimsAddress:"", phone:"", fax:"", portal:"", notes:""},
+  {name:"Self Pay", claimsAddress:"", phone:"", fax:"", portal:"", notes:""},
+  {name:"Step Up for Students", claimsAddress:"", phone:"", fax:"", portal:"", notes:""}
+];
+
+const defaults = {
+  payers: JSON.parse(JSON.stringify(defaultPayers)),
+  providers: [
+    {id:"prov1", name:"Emily", role:"OT", npi:"1023786266", color:providerPalette[0], blocks:[]},
+    {id:"prov2", name:"Alexis", role:"PT", npi:"1114695509", color:providerPalette[1], blocks:[]},
+    {id:"prov3", name:"Rachel", role:"SLP", npi:"1245124254", color:providerPalette[2], blocks:[]},
+    {id:"prov4", name:"Elli", role:"OTA", npi:"1205423340", color:providerPalette[3], blocks:[]}
+  ],
+  patients: [],
+  appointments: [],
+  referrals: [],
+  calendarMonth: new Date().getMonth(),
+  calendarYear: new Date().getFullYear(),
+  selectedDate: "",
+  scheduleView: "month",
+  selectedProviderId: "",
+  slotWeekdayPreference: ""
+};
+
+let state = load();
+const views = ["dashboard","referrals","patients","providers","schedule","payers","imports"];
+
+function load(){
+  const raw = localStorage.getItem(KEY);
+  if(!raw) return JSON.parse(JSON.stringify(defaults));
+  try { return JSON.parse(raw); } catch { return JSON.parse(JSON.stringify(defaults)); }
+}
+function save(){ localStorage.setItem(KEY, JSON.stringify(state)); renderAll(); }
+function uid(prefix){ return prefix + "_" + Math.random().toString(36).slice(2,9); }
+function esc(s){ return String(s ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;"); }
+function patient(id){ return state.patients.find(x=>x.id===id); }
+function provider(id){ return state.providers.find(x=>x.id===id); }
+
+function nav(active="dashboard"){
+  document.getElementById("nav").innerHTML = views.map(v => `<button class="${v===active?'active':''}" onclick="show('${v}')">${({dashboard:"Dashboard",referrals:"Referrals",patients:"Patients",providers:"Providers",schedule:"Schedule",payers:"Payers",imports:"Imports"})[v]}</button>`).join("");
+}
+function show(id){
+  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  nav(id);
+}
+function parseField(text,label){
+  const m = text.match(new RegExp(label + "\\s*:\\s*(.+)","i"));
+  return m ? m[1].trim() : "";
+}
+function toDisplayDate(iso){
+  return new Date(iso + "T12:00:00").toLocaleDateString("en-US",{weekday:"long", month:"long", day:"numeric", year:"numeric"});
+}
+function weekdayNameFromIso(iso){
+  return weekdays[new Date(iso + "T12:00:00").getDay()];
+}
+
+function renderDashboard(){
+  document.getElementById("dashboard").innerHTML = `
+    <h1 class="title">Phase 5.2</h1>
+    <div class="subtitle">This version fixes referral scheduling logic and adds provider availability plus intake document tracking.</div>
+    <div class="grid">
+      <div class="card"><h3>Referrals</h3><div class="stat">${state.referrals.length}</div><div class="muted">Referral queue with weekday-aware suggestions</div></div>
+      <div class="card"><h3>Patients</h3><div class="stat">${state.patients.length}</div><div class="muted">Document and release tracking added</div></div>
+      <div class="card"><h3>Appointments</h3><div class="stat">${state.appointments.length}</div><div class="muted">Office opens at 8:00 AM</div></div>
+      <div class="card"><h3>Blocked times</h3><div class="stat">${state.providers.reduce((n,p)=>n+(p.blocks?.length||0),0)}</div><div class="muted">Lunch, vacation, late start, out early</div></div>
+    </div>
+  `;
+}
+
+function renderReferrals(){
+  document.getElementById("referrals").innerHTML = `
+    <h1 class="title">Referrals</h1>
+    <div class="subtitle">Paste referral into form, create the patient once, then use weekday-aware eval suggestions.</div>
+    <div class="split">
+      <div class="card">
+        <h3>Add referral manually</h3>
+        <div class="row"><input id="r_name" placeholder="Patient full name"><input id="r_dob" type="date"></div>
+        <div class="row"><select id="r_sex"><option value="">Sex</option><option>Male</option><option>Female</option><option>Other</option><option>Prefer not to say</option></select><input id="r_phone" placeholder="Phone"></div>
+        <div class="row"><input id="r_guardian" placeholder="Parent / guardian"><input id="r_member" placeholder="Member ID"></div>
+        <div class="row"><select id="r_payer"><option value="">Select payer</option>${state.payers.map(p=>`<option value="${esc(p.name)}">${esc(p.name)}</option>`).join("")}</select><input id="r_referring" placeholder="Referring provider"></div>
+        <div class="row"><input id="r_dx" placeholder="Diagnosis from referral"><select id="r_discipline"><option value="OT">OT eval</option><option value="PT">PT eval</option><option value="SLP">Speech eval</option></select></div>
+        <div class="row3"><input id="r_street" placeholder="Street"><input id="r_apt" placeholder="Apartment / unit #"><input id="r_city" placeholder="City"></div>
+        <div class="row3"><input id="r_state" placeholder="State"><input id="r_zip" placeholder="ZIP"><input id="r_notes" placeholder="Referral notes"></div>
+        <button class="btn" onclick="addReferralManual()">Save referral</button>
+      </div>
+      <div class="card">
+        <h3>Paste referral into form</h3>
+        <textarea id="referralText" placeholder="Name: Jane Doe&#10;DOB: 2018-06-01&#10;Sex: Female&#10;Phone: 904-555-1212&#10;Guardian: Mom Name&#10;Payer: Sunshine Health&#10;Member ID: ABC123&#10;Referring Provider: Dr Smith&#10;Diagnosis: F80.2&#10;Street: 123 Main St&#10;Apartment: 2B&#10;City: Yulee&#10;State: FL&#10;ZIP: 32097"></textarea>
+        <div class="toolbar">
+          <button class="btn secondary" onclick="parseReferralText()">Paste referral into form</button>
+          <button class="btn secondary" onclick="document.getElementById('refCsv').click()">Import referral CSV</button>
+          <input id="refCsv" type="file" accept=".csv,.txt" style="display:none" onchange="importReferrals(event)">
+        </div>
+        <div class="row">
+          <select id="weekdayPreference" onchange="setWeekdayPreference(this.value)">
+            <option value="">What day works best?</option>
+            <option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option>
+          </select>
+          <div class="small muted" style="padding-top:12px">Choose a preferred weekday before showing slots.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Referral queue</h3>
+      ${state.referrals.length ? `<div class="list">${state.referrals.map(r=>`
+        <div class="item">
+          <div><span class="tag">${esc(r.status.replaceAll("_"," "))}</span><span class="tag">${esc(r.discipline)} eval</span></div>
+          <h4>${esc(r.name)}</h4>
+          <div class="small muted">Payer: ${esc(r.payer || "—")} • Referring provider: ${esc(r.referring || "—")} • DX: ${esc(r.dx || "—")}</div>
+          <div class="small muted">Address: ${esc(r.street || "")} ${esc(r.apt || "")} ${esc(r.city || "")} ${esc(r.state || "")} ${esc(r.zip || "")}</div>
+          <div class="toolbar">
+            <button class="btn small" ${r.patientCreated ? 'disabled' : ''} onclick="createPatientFromReferral('${r.id}')">${r.patientCreated ? 'Patient created' : 'Create patient'}</button>
+            <button class="btn secondary small" onclick="showEvalSlots('${r.id}')">Show eval slots</button>
+            <button class="btn danger small" onclick="deleteReferral('${r.id}')">Delete</button>
+          </div>
+          ${r.slotPreview && r.slotPreview.length ? `<div><strong class="small">Suggested eval slots:</strong><div>${r.slotPreview.map(s=>`<button class="slotBtn" onclick="applyEvalSlot('${r.id}','${encodeURIComponent(s.date)}','${encodeURIComponent(s.time)}','${s.providerId}')">${esc(s.label)}</button>`).join("")}</div></div>` : ""}
+        </div>
+      `).join("")}</div>` : `<div class="empty">No referrals yet.</div>`}
+    </div>
+  `;
+}
+function setWeekdayPreference(value){
+  state.slotWeekdayPreference = value;
+  save();
+}
+function parseReferralText(){
+  const t = document.getElementById("referralText").value;
+  document.getElementById("r_name").value = parseField(t,"name");
+  document.getElementById("r_dob").value = parseField(t,"dob");
+  document.getElementById("r_sex").value = parseField(t,"sex");
+  document.getElementById("r_phone").value = parseField(t,"phone");
+  document.getElementById("r_guardian").value = parseField(t,"guardian");
+  document.getElementById("r_member").value = parseField(t,"member id");
+  document.getElementById("r_payer").value = parseField(t,"payer");
+  document.getElementById("r_referring").value = parseField(t,"referring provider");
+  document.getElementById("r_dx").value = parseField(t,"diagnosis");
+  document.getElementById("r_street").value = parseField(t,"street");
+  document.getElementById("r_apt").value = parseField(t,"apartment") || parseField(t,"apt") || parseField(t,"unit");
+  document.getElementById("r_city").value = parseField(t,"city");
+  document.getElementById("r_state").value = parseField(t,"state");
+  document.getElementById("r_zip").value = parseField(t,"zip");
+}
+function addReferralManual(){
+  const name = document.getElementById("r_name").value.trim();
+  if(!name) return;
+  state.referrals.unshift({
+    id:uid("ref"),
+    name, dob:document.getElementById("r_dob").value, sex:document.getElementById("r_sex").value,
+    phone:document.getElementById("r_phone").value.trim(), guardian:document.getElementById("r_guardian").value.trim(),
+    memberId:document.getElementById("r_member").value.trim(), payer:document.getElementById("r_payer").value,
+    referring:document.getElementById("r_referring").value.trim(), dx:document.getElementById("r_dx").value.trim(),
+    discipline:document.getElementById("r_discipline").value, street:document.getElementById("r_street").value.trim(),
+    apt:document.getElementById("r_apt").value.trim(), city:document.getElementById("r_city").value.trim(),
+    state:document.getElementById("r_state").value.trim(), zip:document.getElementById("r_zip").value.trim(),
+    notes:document.getElementById("r_notes").value.trim(), status:"received", slotPreview:[], patientCreated:false
+  });
+  save();
+}
+function deleteReferral(id){
+  if(!confirm("Delete referral?")) return;
+  state.referrals = state.referrals.filter(r=>r.id!==id);
+  save();
+}
+function createPatientFromReferral(id){
+  const r = state.referrals.find(x=>x.id===id);
+  if(!r || r.patientCreated) return;
+  state.patients.unshift({
+    id:uid("pt"), name:r.name, dob:r.dob, sex:r.sex, phone:r.phone, guardian:r.guardian,
+    payer:r.payer, memberId:r.memberId, relationship:r.guardian ? "Child" : "", referring:r.referring, dx:r.dx,
+    street:r.street, apt:r.apt, city:r.city, state:r.state, zip:r.zip,
+    insuranceCardFront:"", insuranceCardBack:"", caregiverIdFront:"", caregiverIdBack:"",
+    hipaaReleaseContacts:"", pickupContacts:"", emergencyContacts:"", restrictionsNotes:""
+  });
+  r.status = "waiting_to_schedule";
+  r.patientCreated = true;
+  save();
+}
+function providerCanTakeSlot(providerObj, isoDate, time){
+  const blocks = providerObj.blocks || [];
+  const weekday = weekdayNameFromIso(isoDate);
+  for(const b of blocks){
+    if(b.type === "vacation" && b.startDate && b.endDate){
+      if(isoDate >= b.startDate && isoDate <= b.endDate) return false;
+    }
+    if(b.type === "all_day" && b.date === isoDate) return false;
+    if((b.type === "lunch" || b.type === "late_start" || b.type === "early_leave" || b.type === "custom") && b.date === isoDate){
+      if(time >= b.startTime && time < b.endTime) return false;
+    }
+    if(b.weekday && b.weekday === weekday){
+      if((b.type === "lunch" || b.type === "late_start" || b.type === "early_leave" || b.type === "custom") && time >= b.startTime && time < b.endTime) return false;
+    }
+  }
+  return true;
+}
+function showEvalSlots(id){
+  const r = state.referrals.find(x=>x.id===id);
+  if(!r) return;
+  const providerMatch = state.providers.find(p=>p.role===r.discipline);
+  if(!providerMatch){ r.slotPreview=[]; save(); return; }
+  const slots = [];
+  const today = new Date();
+  const preference = state.slotWeekdayPreference || "";
+  for(let i=0;i<35 && slots.length<10;i++){
+    const d = new Date(today);
+    d.setDate(today.getDate()+i);
+    const day = d.getDay();
+    if(day===0 || day===6) continue;
+    const iso = d.toISOString().slice(0,10);
+    const weekday = weekdayNameFromIso(iso);
+    if(preference && weekday !== preference) continue;
+    const taken = state.appointments.filter(a=>a.providerId===providerMatch.id && a.date===iso).map(a=>a.time);
+    const open = timeOptions.filter(t=>!taken.includes(t) && providerCanTakeSlot(providerMatch, iso, t));
+    for(let t of open.slice(0,3)){
+      slots.push({date:iso,time:t,providerId:providerMatch.id,providerName:providerMatch.name,label:`${toDisplayDate(iso)} at ${t} with ${providerMatch.name}`});
+      if(slots.length>=10) break;
+    }
+  }
+  r.slotPreview = slots;
+  r.status = "waiting_to_schedule";
+  save();
+}
+function applyEvalSlot(referralId, date, time, providerId){
+  state.selectedDate = decodeURIComponent(date);
+  state.selectedProviderId = providerId;
+  show('schedule');
+  setTimeout(()=>{
+    const ref = state.referrals.find(r=>r.id===referralId);
+    if(ref && ref.patientCreated){
+      const pat = state.patients.find(p=>p.name===ref.name);
+      if(pat){
+        const psel = document.getElementById("apptPatient");
+        if(psel) psel.value = pat.id;
+      }
+    }
+    const d = document.getElementById("apptDate");
+    const t = document.getElementById("apptTime");
+    const prov = document.getElementById("apptProvider");
+    const typ = document.getElementById("apptType");
+    if(d) d.value = decodeURIComponent(date);
+    if(t) t.value = decodeURIComponent(time);
+    if(prov) prov.value = providerId;
+    if(typ) typ.value = "Evaluation";
+  }, 50);
+}
+
+function renderPatients(){
+  document.getElementById("patients").innerHTML = `
+    <h1 class="title">Patients</h1>
+    <div class="subtitle">Delete duplicates is back, and patient files now include intake document and release tracking placeholders.</div>
+    ${state.patients.length ? `<div class="list">${state.patients.map((p, idx)=>`
+      <div class="item">
+        <h4>${esc(p.name)}</h4>
+        <div class="small muted">DOB: ${esc(p.dob || "—")} • Sex: ${esc(p.sex || "—")} • Phone: ${esc(p.phone || "—")}</div>
+        <div class="small muted">Guardian: ${esc(p.guardian || "—")} • Payer: ${esc(p.payer || "—")} • Member ID: ${esc(p.memberId || "—")}</div>
+        <div class="small muted">Referring: ${esc(p.referring || "—")} • DX: ${esc(p.dx || "—")}</div>
+        <div class="small muted">Address: ${esc(p.street || "")} ${esc(p.apt || "")} ${esc(p.city || "")} ${esc(p.state || "")} ${esc(p.zip || "")}</div>
+        <details>
+          <summary class="small">Intake document / HIPAA / pickup tracking</summary>
+          <div class="row">
+            <input value="${esc(p.insuranceCardFront || '')}" onchange="editPatient(${idx},'insuranceCardFront',this.value)" placeholder="Insurance card front file note">
+            <input value="${esc(p.insuranceCardBack || '')}" onchange="editPatient(${idx},'insuranceCardBack',this.value)" placeholder="Insurance card back file note">
+          </div>
+          <div class="row">
+            <input value="${esc(p.caregiverIdFront || '')}" onchange="editPatient(${idx},'caregiverIdFront',this.value)" placeholder="Caregiver ID front file note">
+            <input value="${esc(p.caregiverIdBack || '')}" onchange="editPatient(${idx},'caregiverIdBack',this.value)" placeholder="Caregiver ID back file note">
+          </div>
+          <textarea onchange="editPatient(${idx},'hipaaReleaseContacts',this.value)" placeholder="Who information can be released to">${esc(p.hipaaReleaseContacts || '')}</textarea>
+          <textarea onchange="editPatient(${idx},'pickupContacts',this.value)" placeholder="Who can pick up the patient">${esc(p.pickupContacts || '')}</textarea>
+          <textarea onchange="editPatient(${idx},'emergencyContacts',this.value)" placeholder="Emergency contacts">${esc(p.emergencyContacts || '')}</textarea>
+          <textarea onchange="editPatient(${idx},'restrictionsNotes',this.value)" placeholder="Restrictions / custody / special notes">${esc(p.restrictionsNotes || '')}</textarea>
+        </details>
+        <div class="toolbar"><button class="btn danger small" onclick="deletePatient('${p.id}')">Delete</button></div>
+      </div>
+    `).join("")}</div>` : `<div class="empty">No patients yet.</div>`}
+  `;
+}
+function editPatient(idx, field, value){
+  if(!state.patients[idx]) return;
+  state.patients[idx][field] = value;
+  save();
+}
+function deletePatient(id){
+  if(!confirm("Delete patient?")) return;
+  state.patients = state.patients.filter(p=>p.id!==id);
+  state.appointments = state.appointments.filter(a=>a.patientId!==id);
+  save();
+}
+
+function renderProviders(){
+  document.getElementById("providers").innerHTML = `
+    <h1 class="title">Providers</h1>
+    <div class="subtitle">Phase 4 provider data stays here, plus blocked times for lunch, vacation, and unavailable hours.</div>
+    <div class="card">
+      ${state.providers.map((p, idx)=>`
+        <div class="item">
+          <div class="row">
+            <div><h4>${esc(p.name)} (${esc(p.role)})</h4><div class="small muted">NPI: ${esc(p.npi || "—")}</div></div>
+            <div style="text-align:right">
+              <label class="pill"><span class="colorSwatch" style="background:${esc(p.color || providerPalette[idx % providerPalette.length])}" onclick="document.getElementById('color_${idx}').click()"></span><span>Color</span><input id="color_${idx}" class="hiddenColor" type="color" value="${esc(p.color || providerPalette[idx % providerPalette.length])}" onchange="setProviderColor('${p.id}', this.value)"></label>
+            </div>
+          </div>
+          <details>
+            <summary class="small">Blocked times</summary>
+            <div class="row3" style="margin-top:10px">
+              <select id="block_type_${idx}">
+                <option value="lunch">Lunch</option>
+                <option value="late_start">Late start</option>
+                <option value="early_leave">Early leave</option>
+                <option value="custom">Custom time block</option>
+                <option value="all_day">All day out</option>
+                <option value="vacation">Vacation</option>
+              </select>
+              <select id="block_weekday_${idx}">
+                <option value="">Specific date instead</option>
+                <option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option>
+              </select>
+              <input id="block_date_${idx}" type="date">
+            </div>
+            <div class="row3">
+              <select id="block_start_${idx}"><option value="">Start time</option>${timeOptions.map(t=>`<option value="${t}">${t}</option>`).join("")}</select>
+              <select id="block_end_${idx}"><option value="">End time</option>${timeOptions.map(t=>`<option value="${t}">${t}</option>`).join("")}</select>
+              <input id="block_enddate_${idx}" type="date" placeholder="Vacation end date">
+            </div>
+            <button class="btn small" onclick="addProviderBlock('${p.id}', ${idx})">Add blocked time</button>
+            <div class="list" style="margin-top:10px">
+              ${(p.blocks||[]).length ? p.blocks.map((b, bi)=>`
+                <div class="item">
+                  <div class="small">${esc(b.type)} • ${esc(b.weekday || b.date || '')} ${b.startTime ? '• ' + esc(b.startTime) + ' to ' + esc(b.endTime) : ''} ${b.endDate ? '• through ' + esc(b.endDate) : ''}</div>
+                  <div class="toolbar"><button class="btn danger small" onclick="deleteProviderBlock('${p.id}', ${bi})">Delete block</button></div>
+                </div>
+              `).join("") : `<div class="empty">No blocked times yet.</div>`}
+            </div>
+          </details>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+function setProviderColor(id, value){
+  const p = provider(id);
+  if(!p) return;
+  p.color = value;
+  save();
+}
+function addProviderBlock(providerId, idx){
+  const p = provider(providerId);
+  if(!p) return;
+  const type = document.getElementById(`block_type_${idx}`).value;
+  const weekday = document.getElementById(`block_weekday_${idx}`).value;
+  const date = document.getElementById(`block_date_${idx}`).value;
+  const startTime = document.getElementById(`block_start_${idx}`).value;
+  const endTime = document.getElementById(`block_end_${idx}`).value;
+  const endDate = document.getElementById(`block_enddate_${idx}`).value;
+  const block = {type, weekday, date, startTime, endTime, endDate, startDate:date};
+  p.blocks = p.blocks || [];
+  p.blocks.push(block);
+  save();
+}
+function deleteProviderBlock(providerId, blockIdx){
+  const p = provider(providerId);
+  if(!p || !p.blocks) return;
+  p.blocks.splice(blockIdx,1);
+  save();
+}
+
+function renderSchedule(){
+  const selectedProviderId = state.selectedProviderId || (state.providers[0]?.id || "");
+  const monthDate = new Date(state.calendarYear, state.calendarMonth, 1);
+  const monthLabel = monthDate.toLocaleDateString("en-US", {month:"long", year:"numeric"});
+  const startWeekday = monthDate.getDay();
+  const daysInMonth = new Date(state.calendarYear, state.calendarMonth + 1, 0).getDate();
+  const prevMonthDays = new Date(state.calendarYear, state.calendarMonth, 0).getDate();
+  const calendarCells = [];
+  for(let i=0; i<42; i++){
+    let day, cellMonth = state.calendarMonth, cellYear = state.calendarYear, other = false;
+    if(i < startWeekday){
+      day = prevMonthDays - startWeekday + i + 1;
+      cellMonth = state.calendarMonth - 1;
+      if(cellMonth < 0){ cellMonth = 11; cellYear--; }
+      other = true;
+    } else if(i >= startWeekday + daysInMonth){
+      day = i - (startWeekday + daysInMonth) + 1;
+      cellMonth = state.calendarMonth + 1;
+      if(cellMonth > 11){ cellMonth = 0; cellYear++; }
+      other = true;
+    } else {
+      day = i - startWeekday + 1;
+    }
+    const date = new Date(cellYear, cellMonth, day);
+    const iso = date.toISOString().slice(0,10);
+    const appts = state.appointments.filter(a => a.date === iso);
+    calendarCells.push({iso, day, other, appts});
+  }
+  const selectedDate = state.selectedDate || "";
+  const selectedAppts = selectedDate ? state.appointments.filter(a=>a.date===selectedDate) : [];
+  const weekDates = getWeekDates(selectedDate || new Date().toISOString().slice(0,10));
+  const providerWeekRows = state.providers.map(p => ({
+    provider:p,
+    days:weekDates.map(d=>({date:d,appts:state.appointments.filter(a=>a.providerId===p.id && a.date===d)}))
+  }));
+  const providerDayAppts = selectedDate && selectedProviderId ? state.appointments.filter(a=>a.date===selectedDate && a.providerId===selectedProviderId) : [];
+  const availableSlots = getAvailableSlots(selectedDate, selectedProviderId);
+
+  document.getElementById("schedule").innerHTML = `
+    <h1 class="title">Schedule</h1>
+    <div class="subtitle">Phase 5.1 schedule stays here, with office hours and blocked times respected.</div>
+    <div class="card">
+      <div class="toolbar">
+        <button class="btn ${state.scheduleView==='month' ? '' : 'secondary'} small" onclick="setScheduleView('month')">Month view</button>
+        <button class="btn ${state.scheduleView==='week' ? '' : 'secondary'} small" onclick="setScheduleView('week')">Provider week view</button>
+        <button class="btn ${state.scheduleView==='day' ? '' : 'secondary'} small" onclick="setScheduleView('day')">Provider day view</button>
+      </div>
+      <div class="row">
+        <div><label class="small">Selected provider</label><select onchange="setSelectedProvider(this.value)">${state.providers.map(p=>`<option value="${p.id}" ${selectedProviderId===p.id?'selected':''}>${esc(p.name)} (${esc(p.role)})</option>`).join("")}</select></div>
+        <div><label class="small">Selected date</label><input type="date" value="${esc(selectedDate)}" onchange="selectDate(this.value)"></div>
+      </div>
+    </div>
+
+    <div class="split">
+      <div class="card">
+        <h3>Add appointment</h3>
+        <select id="apptPatient"><option value="">Select patient</option>${state.patients.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join("")}</select>
+        <div class="row">
+          <select id="apptProvider"><option value="">Select provider</option>${state.providers.map(p=>`<option value="${p.id}" ${selectedProviderId===p.id?'selected':''}>${esc(p.name)} (${esc(p.role)})</option>`).join("")}</select>
+          <input id="apptDate" type="date" value="${esc(selectedDate)}">
+        </div>
+        <div class="row3">
+          <select id="apptTime"><option value="">Select time</option>${timeOptions.map(t=>`<option value="${t}">${t}</option>`).join("")}</select>
+          <select id="apptLength"><option value="">Length</option>${lengthOptions.map(t=>`<option value="${t}">${t} min</option>`).join("")}</select>
+          <select id="apptType"><option value="Treatment">Treatment</option><option value="Evaluation">Evaluation</option></select>
+        </div>
+        <label class="small"><input id="apptRecurring" type="checkbox"> Repeat weekly for 8 weeks</label><br><br>
+        <button class="btn" onclick="addAppointment()">Add appointment</button>
+      </div>
+      <div class="card">
+        <h3>Open slots</h3>
+        ${selectedDate && selectedProviderId ? (
+          availableSlots.length ? `<div class="list">${availableSlots.slice(0,16).map(t=>`<div class="pill">${esc(t)}</div>`).join("")}</div>` : `<div class="empty">No open slots found for this provider on this date.</div>`
+        ) : `<div class="empty">Pick a provider and date to see open slots.</div>`}
+      </div>
+    </div>
+
+    ${state.scheduleView === 'month' ? `
+      <div class="card">
+        <div class="calHeader">
+          <button class="btn secondary small" onclick="changeMonth(-1)">Previous</button>
+          <div><strong>${esc(monthLabel)}</strong></div>
+          <button class="btn secondary small" onclick="changeMonth(1)">Next</button>
+        </div>
+        <div class="legend">${state.providers.map(p=>`<div class="legendItem"><span class="dot" style="background:${esc(p.color || '#ddd')}"></span>${esc(p.name)}</div>`).join("")}</div>
+        <div class="monthGrid" style="margin-top:12px">
+          <div class="dow">Sun</div><div class="dow">Mon</div><div class="dow">Tue</div><div class="dow">Wed</div><div class="dow">Thu</div><div class="dow">Fri</div><div class="dow">Sat</div>
+          ${calendarCells.map(c=>`
+            <div class="dayCell ${c.other ? 'other' : ''}" onclick="selectDate('${c.iso}')">
+              <div class="dayNum">${c.day}</div>
+              ${c.appts.map(a=>{ const p=patient(a.patientId); const prov=provider(a.providerId); return `<div class="apptChip" style="background:${esc(prov?.color || '#ddd')}"><strong>${esc(a.time || "")}</strong>${esc(p ? p.name : "Unknown")}<div>${esc(String(a.length || ""))} min • ${esc(prov ? prov.name : "—")}</div></div>`; }).join("")}
+            </div>`).join("")}
+        </div>
+      </div>` : ''}
+
+    ${state.scheduleView === 'week' ? `
+      <div class="card">
+        <h3>Provider week view</h3>
+        <div class="weekProviderGrid">
+          <div></div>
+          ${weekDates.map(d=>`<div class="cellHead">${formatShortDate(d)}</div>`).join("")}
+          ${providerWeekRows.map(r=>`
+            <div class="providerNameCell"><span class="dot" style="background:${esc(r.provider.color || '#ddd')}"></span> ${esc(r.provider.name)}</div>
+            ${r.days.map(day=>`<div class="weekSlot">${day.appts.length ? day.appts.map(a=>{ const p=patient(a.patientId); return `<div class="apptChip" style="background:${esc(r.provider.color || '#ddd')};margin-bottom:6px"><strong>${esc(a.time)}</strong>${esc(p ? p.name : "Unknown")}<div>${esc(String(a.length || ""))} min • ${esc(a.type)}</div></div>`; }).join("") : `<div class="small muted">Open</div>`}</div>`).join("")}
+          `).join("")}
+        </div>
+      </div>` : ''}
+
+    ${state.scheduleView === 'day' ? `
+      <div class="card">
+        <h3>Provider day view</h3>
+        <div class="small muted" style="margin-bottom:10px">${selectedDate ? esc(toDisplayDate(selectedDate)) : 'Pick a date.'} • ${esc(provider(selectedProviderId)?.name || '')}</div>
+        ${selectedDate && selectedProviderId ? `<div class="dayTimeline"><div class="timeCol">${timeOptions.map(t=>`<div class="timeLabel">${esc(t)}</div>`).join("")}</div><div class="dayCol">${timeOptions.map(t=>{ const appts=providerDayAppts.filter(a=>a.time===t); const open = getAvailableSlots(selectedDate, selectedProviderId).includes(t); return `<div class="daySlot">${appts.length ? appts.map(a=>{ const p=patient(a.patientId); return `<div class="apptChip" style="background:${esc(provider(selectedProviderId)?.color || '#ddd')}"><strong>${esc(p ? p.name : "Unknown")}</strong>${esc(String(a.length || ""))} min • ${esc(a.type)}<div class="toolbar" style="margin-top:6px"><button class="btn danger small" onclick="deleteAppointment('${a.id}')">Delete</button></div></div>`; }).join("") : (open ? `<div class="small muted">Open</div>` : `<div class="small muted">Blocked</div>`)}</div>`; }).join("")}</div></div>` : `<div class="empty">Pick a provider and date to use day view.</div>`}
+      </div>` : ''}
+
+    <div class="card">
+      <h3>Selected date details</h3>
+      ${selectedDate ? `<div class="small muted" style="margin-bottom:8px">${esc(toDisplayDate(selectedDate))}</div>` : `<div class="small muted" style="margin-bottom:8px">Click a date in the calendar.</div>`}
+      ${selectedAppts.length ? `<div class="list">${selectedAppts.map(a=>{ const p=patient(a.patientId); const prov=provider(a.providerId); return `<div class="item"><h4>${esc(p ? p.name : "Unknown patient")}</h4><div class="small muted">${esc(a.time)} • ${esc(String(a.length || ""))} min • ${esc(a.type)} • ${esc(prov ? prov.name : "—")}</div><div class="small muted">${a.recurring ? "Recurring weekly" : "One-time"}</div><div class="toolbar"><button class="btn danger small" onclick="deleteAppointment('${a.id}')">Delete</button></div></div>`; }).join("")}</div>` : `<div class="empty">No appointments for this date.</div>`}
+    </div>
+  `;
+}
+function setScheduleView(v){ state.scheduleView = v; save(); }
+function setSelectedProvider(id){ state.selectedProviderId = id; save(); }
+function selectDate(iso){ state.selectedDate = iso; save(); }
+function changeMonth(delta){
+  let m = state.calendarMonth + delta, y = state.calendarYear;
+  if(m<0){ m=11; y--; }
+  if(m>11){ m=0; y++; }
+  state.calendarMonth = m; state.calendarYear = y; save();
+}
+function providerCanTakeSlot(providerObj, isoDate, time){
+  const blocks = providerObj.blocks || [];
+  const weekday = weekdayNameFromIso(isoDate);
+  for(const b of blocks){
+    if(b.type === "vacation" && b.startDate && b.endDate){
+      if(isoDate >= b.startDate && isoDate <= b.endDate) return false;
+    }
+    if(b.type === "all_day" && b.date === isoDate) return false;
+    if((b.type === "lunch" || b.type === "late_start" || b.type === "early_leave" || b.type === "custom") && b.date === isoDate){
+      if(time >= b.startTime && time < b.endTime) return false;
+    }
+    if(b.weekday && b.weekday === weekday){
+      if((b.type === "lunch" || b.type === "late_start" || b.type === "early_leave" || b.type === "custom") && time >= b.startTime && time < b.endTime) return false;
+    }
+  }
+  return true;
+}
+function addAppointment(){
+  const patientId = document.getElementById("apptPatient").value;
+  const providerId = document.getElementById("apptProvider").value;
+  const date = document.getElementById("apptDate").value;
+  const time = document.getElementById("apptTime").value;
+  const length = document.getElementById("apptLength").value;
+  const type = document.getElementById("apptType").value;
+  const recurring = document.getElementById("apptRecurring").checked;
+  if(!patientId || !providerId || !date || !time || !length) return;
+  const prov = provider(providerId);
+  if(prov && !providerCanTakeSlot(prov, date, time)){ alert("That provider is blocked for that time."); return; }
+  const addOne = (dateString, recurringFlag) => state.appointments.push({id:uid("appt"),patientId,providerId,date:dateString,time,length,type,recurring:recurringFlag});
+  addOne(date, recurring);
+  if(recurring){
+    const start = new Date(date + "T12:00:00");
+    for(let i=1;i<8;i++){
+      const next = new Date(start);
+      next.setDate(start.getDate() + (i*7));
+      const iso = next.toISOString().slice(0,10);
+      if(prov && providerCanTakeSlot(prov, iso, time)) addOne(iso, true);
+    }
+  }
+  const pat = patient(patientId);
+  if(pat){
+    const ref = state.referrals.find(r=>r.name===pat.name && r.status==='waiting_to_schedule');
+    if(ref) ref.status = 'eval_scheduled';
+  }
+  state.selectedDate = date;
+  state.selectedProviderId = providerId;
+  save();
+}
+function deleteAppointment(id){
+  if(!confirm("Delete appointment?")) return;
+  state.appointments = state.appointments.filter(a=>a.id!==id);
+  save();
+}
+
+function getWeekDates(anchorIso){
+  if(!anchorIso) return [];
+  const d = new Date(anchorIso + "T12:00:00");
+  const day = d.getDay();
+  const monday = new Date(d);
+  monday.setDate(d.getDate() + (-day + 1));
+  const out = [];
+  for(let i=0;i<5;i++){ const x = new Date(monday); x.setDate(monday.getDate()+i); out.push(x.toISOString().slice(0,10)); }
+  return out;
+}
+function formatShortDate(iso){ return new Date(iso + "T12:00:00").toLocaleDateString("en-US",{weekday:"short",month:"numeric",day:"numeric"}); }
+function getAvailableSlots(date, providerId){
+  if(!date || !providerId) return [];
+  const prov = provider(providerId);
+  if(!prov) return [];
+  const taken = state.appointments.filter(a=>a.date===date && a.providerId===providerId).map(a=>a.time);
+  return timeOptions.filter(t=>!taken.includes(t) && providerCanTakeSlot(prov, date, t));
+}
+
+function renderPayers(){
+  document.getElementById("payers").innerHTML = `
+    <h1 class="title">Payers</h1>
+    <div class="subtitle">Payer records are still here. Real addresses and phone numbers still need to be filled in or imported later.</div>
+    <div class="list">
+      ${state.payers.map((p, idx)=>`
+        <div class="item">
+          <div class="row"><input value="${esc(p.name)}" onchange="editPayer(${idx},'name',this.value)"><input value="${esc(p.phone || '')}" onchange="editPayer(${idx},'phone',this.value)" placeholder="Phone"></div>
+          <div class="row"><input value="${esc(p.fax || '')}" onchange="editPayer(${idx},'fax',this.value)" placeholder="Fax"><input value="${esc(p.portal || '')}" onchange="editPayer(${idx},'portal',this.value)" placeholder="Portal"></div>
+          <textarea onchange="editPayer(${idx},'claimsAddress',this.value)" placeholder="Claims address">${esc(p.claimsAddress || '')}</textarea>
+          <textarea onchange="editPayer(${idx},'notes',this.value)" placeholder="Notes">${esc(p.notes || '')}</textarea>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+function editPayer(idx, field, value){ if(!state.payers[idx]) return; state.payers[idx][field] = value; save(); }
+
+function renderImports(){
+  document.getElementById("imports").innerHTML = `
+    <h1 class="title">Imports</h1>
+    <div class="subtitle">Import patients or referrals.</div>
+    <div class="split">
+      <div class="card">
+        <h3>Import referral CSV</h3>
+        <div class="muted">Columns: name,dob,sex,phone,guardian,payer,memberId,referring,dx,discipline,street,apt,city,state,zip,notes</div>
+        <button class="btn" onclick="document.getElementById('refCsv2').click()">Choose referral CSV</button>
+        <input id="refCsv2" type="file" accept=".csv" style="display:none" onchange="importReferrals(event)">
+      </div>
+      <div class="card">
+        <h3>Import patient CSV</h3>
+        <div class="muted">Columns: name,dob,sex,phone,guardian,payer,memberId,relationship,referring,dx,street,apt,city,state,zip</div>
+        <button class="btn" onclick="document.getElementById('patientCsv').click()">Choose patient CSV</button>
+        <input id="patientCsv" type="file" accept=".csv" style="display:none" onchange="importPatients(event)">
+      </div>
+    </div>
+  `;
+}
+function importReferrals(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const lines = String(e.target.result).split(/\r?\n/).filter(Boolean);
+    if(lines.length < 2) return alert("CSV needs a header row and at least one referral row.");
+    const headers = lines[0].split(",").map(x=>x.trim());
+    for(let i=1;i<lines.length;i++){
+      const cells = lines[i].split(",");
+      const row = {};
+      headers.forEach((h, idx)=> row[h] = (cells[idx] || "").trim());
+      if(row.name){
+        state.referrals.push({
+          id:uid("ref"), name:row.name, dob:row.dob||"", sex:row.sex||"", phone:row.phone||"", guardian:row.guardian||"",
+          memberId:row.memberId||"", payer:row.payer||"", referring:row.referring||"", dx:row.dx||"", discipline:row.discipline||"OT",
+          street:row.street||"", apt:row.apt||"", city:row.city||"", state:row.state||"", zip:row.zip||"", notes:row.notes||"",
+          status:"received", slotPreview:[], patientCreated:false
+        });
+      }
+    }
+    save(); alert("Referrals imported.");
+  };
+  reader.readAsText(file);
+}
+function importPatients(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const lines = String(e.target.result).split(/\r?\n/).filter(Boolean);
+    if(lines.length < 2) return alert("CSV needs a header row and at least one patient row.");
+    const headers = lines[0].split(",").map(x=>x.trim());
+    for(let i=1;i<lines.length;i++){
+      const cells = lines[i].split(",");
+      const row = {};
+      headers.forEach((h, idx)=> row[h] = (cells[idx] || "").trim());
+      if(row.name){
+        state.patients.push({
+          id:uid("pt"), name:row.name, dob:row.dob||"", sex:row.sex||"", phone:row.phone||"", guardian:row.guardian||"",
+          payer:row.payer||"", memberId:row.memberId||"", relationship:row.relationship||"", referring:row.referring||"", dx:row.dx||"",
+          street:row.street||"", apt:row.apt||"", city:row.city||"", state:row.state||"", zip:row.zip||"",
+          insuranceCardFront:"", insuranceCardBack:"", caregiverIdFront:"", caregiverIdBack:"",
+          hipaaReleaseContacts:"", pickupContacts:"", emergencyContacts:"", restrictionsNotes:""
+        });
+      }
+    }
+    save(); alert("Patients imported.");
+  };
+  reader.readAsText(file);
+}
+
+function renderAll(){
+  renderDashboard();
+  renderReferrals();
+  renderPatients();
+  renderProviders();
+  renderSchedule();
+  renderPayers();
+  renderImports();
+}
+renderAll();
+show("dashboard");
+</script>
+</body>
+</html>
